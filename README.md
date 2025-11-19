@@ -56,7 +56,19 @@ git clone git@github.com:YOUR_USERNAME/YOUR_REPO.git golem-n8n
 cd golem-n8n
 ```
 
-### 4. Uruchomienie
+### 4. Konfiguracja zmiennych środowiskowych
+
+Utwórz plik `.env` na podstawie `.env.example`:
+```bash
+cd ~/golem-n8n
+cp .env.example .env
+# Edytuj .env i zmień hasła na silne wartości
+nano .env
+```
+
+**WAŻNE:** Zmień `POSTGRES_PASSWORD` na silne hasło w pliku `.env`!
+
+### 5. Uruchomienie
 
 ```bash
 docker compose up -d
@@ -68,7 +80,7 @@ docker compose ps
 docker compose logs -f
 ```
 
-### 5. Konfiguracja automatycznego wdrażania (CI/CD)
+### 6. Konfiguracja automatycznego wdrażania (CI/CD)
 
 Aby włączyć automatyczne wdrażanie po każdym commicie do maina:
 
