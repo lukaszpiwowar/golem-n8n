@@ -1,0 +1,35 @@
+name: Deploy to Server
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Deploy to server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            echo "🚀 Rozpoczynam wdrażanie..."
+            cd golem-n8n
+            echo "📥 Pobieranie najnowszych zmian z repozytorium..."
+            git pull origin main
+            echo "🐳 Aktualizacja obrazów Docker..."
+            docker compose pull
+            echo "🔄 Restartowanie kontenerów..."
+            docker compose up -d
+            echo "✅ Sprawdzanie statusu kontenerów..."
+            docker compose ps
+            echo "✨ Wdrażanie zakończone pomyślnie!"
+

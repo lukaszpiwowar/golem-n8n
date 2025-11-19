@@ -1,0 +1,14 @@
+{
+    servers {
+        strict_sni_host
+    }
+}
+
+n8n.piwowar.ovh {
+    reverse_proxy n8n:5678
+}
+
+piwowar.ovh {
+    root * /var/www/html
+    file_server
+}
