@@ -13,17 +13,32 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
       
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts 2>/dev/null || true
+      
+      - name: Test SSH connection
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+              -o StrictHostKeyChecking=no \
+              -o UserKnownHostsFile=~/.ssh/known_hosts \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+              "echo 'SSH connection successful'"
+      
       - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          timeout: 30s
+          timeout: 60s
           script: |
             set -e
             echo "🚀 Rozpoczynam wdrażanie..."
-            cd golem-n8n
+            cd ~/golem-n8n || { echo "❌ Katalog golem-n8n nie istnieje!"; exit 1; }
             echo "📥 Pobieranie najnowszych zmian z repozytorium..."
             git pull origin main
             echo "🐳 Aktualizacja obrazów Docker..."

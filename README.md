@@ -84,46 +84,36 @@ docker compose logs -f
 
 Aby włączyć automatyczne wdrażanie po każdym commicie do maina:
 
-1. **Pobierz klucz prywatny SSH z serwera:**
+1. **Pobierz klucz deployment SSH:**
    
-   **Opcja A - Użyj skryptu pomocniczego (zalecane):**
+   **Użyj skryptu pomocniczego (zalecane):**
    ```bash
-   ./verify-ssh-key.sh lukasz@46.224.7.113
+   ./get-deploy-key.sh
    ```
    
-   **Opcja B - Ręcznie:**
+   Skrypt wyświetli klucz prywatny, który został już skonfigurowany na serwerze.
+   
+   **Alternatywnie - ręcznie:**
    ```bash
-   ssh lukasz@46.224.7.113 "cat ~/.ssh/id_ed25519"
+   ssh lukasz@46.224.7.113 "cat ~/.ssh/id_ed25519_deploy"
    ```
    
    **WAŻNE:** Skopiuj CAŁĄ zawartość klucza, włącznie z:
    - `-----BEGIN OPENSSH PRIVATE KEY-----`
    - Wszystkie linie klucza
    - `-----END OPENSSH PRIVATE KEY-----`
-   
-   Klucz powinien mieć format:
-   ```
-   -----BEGIN OPENSSH PRIVATE KEY-----
-   b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
-   ...
-   -----END OPENSSH PRIVATE KEY-----
-   ```
 
 2. **Dodaj secrets do GitHub:**
    - Przejdź do Settings → Secrets and variables → Actions
    - Kliknij **New repository secret** i dodaj:
      - **Name**: `SSH_HOST` → **Value**: `46.224.7.113`
      - **Name**: `SSH_USER` → **Value**: `lukasz`
-     - **Name**: `SSH_PRIVATE_KEY` → **Value**: (wklej CAŁĄ zawartość klucza prywatnego z kroku 1)
-     - **Name**: `SSH_PORT` (opcjonalnie) → **Value**: `22` (jeśli używasz domyślnego portu SSH)
+     - **Name**: `SSH_PRIVATE_KEY` → **Value**: (wklej CAŁĄ zawartość klucza z kroku 1)
    
-   **Uwaga:** Upewnij się, że wklejasz klucz prywatny (z `BEGIN PRIVATE KEY`), a nie publiczny!
-   
-   **Rozwiązywanie problemów z autentykacją SSH:**
-   - Upewnij się, że klucz jest w formacie OpenSSH (zaczyna się od `-----BEGIN OPENSSH PRIVATE KEY-----`)
-   - Jeśli klucz jest w starym formacie, przekonwertuj go: `ssh-keygen -p -m PEM -f ~/.ssh/id_ed25519`
+   **Uwaga:** 
+   - Upewnij się, że wklejasz klucz prywatny (z `BEGIN OPENSSH PRIVATE KEY`), a nie publiczny!
+   - Klucz deployment (`id_ed25519_deploy`) został już dodany do `authorized_keys` na serwerze
    - W GitHub Secrets, upewnij się, że nie ma dodatkowych spacji na początku/końcu
-   - Klucz powinien być w jednej linii lub z zachowanymi znakami nowej linii
 
 3. **Po każdym pushu do maina**, GitHub Actions automatycznie:
    - Połączy się z serwerem przez SSH
