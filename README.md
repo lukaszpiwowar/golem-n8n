@@ -73,16 +73,45 @@ docker compose logs -f
 Aby włączyć automatyczne wdrażanie po każdym commicie do maina:
 
 1. **Pobierz klucz prywatny SSH z serwera:**
+   
+   **Opcja A - Użyj skryptu pomocniczego (zalecane):**
+   ```bash
+   ./verify-ssh-key.sh lukasz@46.224.7.113
+   ```
+   
+   **Opcja B - Ręcznie:**
    ```bash
    ssh lukasz@46.224.7.113 "cat ~/.ssh/id_ed25519"
+   ```
+   
+   **WAŻNE:** Skopiuj CAŁĄ zawartość klucza, włącznie z:
+   - `-----BEGIN OPENSSH PRIVATE KEY-----`
+   - Wszystkie linie klucza
+   - `-----END OPENSSH PRIVATE KEY-----`
+   
+   Klucz powinien mieć format:
+   ```
+   -----BEGIN OPENSSH PRIVATE KEY-----
+   b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtzc2gtZW
+   ...
+   -----END OPENSSH PRIVATE KEY-----
    ```
 
 2. **Dodaj secrets do GitHub:**
    - Przejdź do Settings → Secrets and variables → Actions
-   - Dodaj następujące secrets:
-     - `SSH_HOST`: `46.224.7.113`
-     - `SSH_USER`: `lukasz`
-     - `SSH_PRIVATE_KEY`: (wklej całą zawartość klucza prywatnego, włącznie z `-----BEGIN OPENSSH PRIVATE KEY-----` i `-----END OPENSSH PRIVATE KEY-----`)
+   - Kliknij **New repository secret** i dodaj:
+     - **Name**: `SSH_HOST` → **Value**: `46.224.7.113`
+     - **Name**: `SSH_USER` → **Value**: `lukasz`
+     - **Name**: `SSH_PRIVATE_KEY` → **Value**: (wklej CAŁĄ zawartość klucza prywatnego z kroku 1)
+     - **Name**: `SSH_PORT` (opcjonalnie) → **Value**: `22` (jeśli używasz domyślnego portu SSH)
+   
+   **Uwaga:** Upewnij się, że wklejasz klucz prywatny (z `BEGIN PRIVATE KEY`), a nie publiczny!
+   
+   **Rozwiązywanie problemów z autentykacją SSH:**
+   - Upewnij się, że klucz jest w formacie OpenSSH (zaczyna się od `-----BEGIN OPENSSH PRIVATE KEY-----`)
+   - Jeśli klucz jest w starym formacie, przekonwertuj go: `ssh-keygen -p -m PEM -f ~/.ssh/id_ed25519`
+   - W GitHub Secrets, upewnij się, że nie ma dodatkowych spacji na początku/końcu
+   - Klucz powinien być w jednej linii lub z zachowanymi znakami nowej linii
 
 3. **Po każdym pushu do maina**, GitHub Actions automatycznie:
    - Połączy się z serwerem przez SSH
