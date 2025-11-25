@@ -5,10 +5,28 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
-});
+// Parse DATABASE_URL and handle special characters in password
+let poolConfig;
+try {
+  const url = new URL(process.env.DATABASE_URL);
+  poolConfig = {
+    host: url.hostname,
+    port: parseInt(url.port) || 5432,
+    database: url.pathname.slice(1), // Remove leading '/'
+    user: url.username,
+    password: url.password, // URL parser handles URL encoding automatically
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  };
+} catch (error) {
+  // Fallback to connection string if URL parsing fails
+  console.warn('Failed to parse DATABASE_URL, using connection string directly');
+  poolConfig = {
+    connectionString: process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+  };
+}
+
+const pool = new Pool(poolConfig);
 
 async function migrate() {
   const client = await pool.connect();
