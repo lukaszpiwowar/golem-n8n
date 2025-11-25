@@ -4,15 +4,17 @@ Projekt zawiera konfigurację Docker Compose dla n8n z Caddy jako reverse proxy.
 
 ## Struktura projektu
 
-- `docker-compose.yml` - Konfiguracja serwisów (Postgres, n8n, Caddy)
+- `docker-compose.yml` - Konfiguracja serwisów (Postgres, n8n, Caddy, Dashboard)
 - `Caddyfile` - Konfiguracja reverse proxy Caddy
 - `static/` - Katalog ze statyczną stroną HTML
+- `dashboard/` - Aplikacja Next.js z TODO i autoryzacją
 - `setup-server.sh` - Skrypt konfiguracyjny serwera
 - `.github/workflows/deploy.yml` - GitHub Actions workflow do automatycznego wdrażania
 
 ## Domeny
 
 - **n8n**: `https://n8n.piwowar.ovh`
+- **Dashboard**: `https://dash.piwowar.ovh`
 - **Strona statyczna**: `https://piwowar.ovh`
 
 ## Instalacja na serwerze
@@ -67,6 +69,10 @@ nano .env
 ```
 
 **WAŻNE:** Zmień `POSTGRES_PASSWORD` na silne hasło w pliku `.env`!
+
+Dodatkowo, dla dashboardu ustaw:
+- `NEXTAUTH_SECRET` - losowy sekretny klucz (np. wygenerowany przez `openssl rand -base64 32`)
+- `DASHBOARD_URL` - URL dashboardu (domyślnie: `https://dash.piwowar.ovh`)
 
 ### 5. Uruchomienie
 
@@ -137,6 +143,7 @@ docker compose restart
 ```bash
 docker compose logs -f n8n
 docker compose logs -f caddy
+docker compose logs -f dashboard
 ```
 
 ### Backup bazy danych
@@ -144,9 +151,35 @@ docker compose logs -f caddy
 docker compose exec postgres pg_dump -U n8n n8n > backup.sql
 ```
 
+## Dashboard
+
+Aplikacja Next.js z funkcjonalnością TODO i autoryzacją.
+
+### Funkcjonalności
+
+- ✅ Rejestracja i logowanie użytkowników
+- ✅ Zarządzanie zadaniami TODO
+- ✅ Persystencja danych w PostgreSQL
+- ✅ Responsywne UI (desktop, tablet, telefon)
+
+### Pierwsze uruchomienie
+
+1. Przy pierwszym uruchomieniu, aplikacja automatycznie:
+   - Utworzy bazę danych `dashboard` w PostgreSQL
+   - Uruchomi migracje tworzące tabele `users` i `todos`
+
+2. Zarejestruj pierwsze konto:
+   - Przejdź do `https://dash.piwowar.ovh/auth/register`
+   - Utwórz konto z emailem i hasłem
+
+3. Zaloguj się i zacznij używać TODO!
+
+Więcej informacji w `dashboard/README.md`.
+
 ## Uwagi
 
-- Upewnij się, że domeny `n8n.piwowar.ovh` i `piwowar.ovh` wskazują na IP serwera (46.224.7.113)
+- Upewnij się, że domeny `n8n.piwowar.ovh`, `dash.piwowar.ovh` i `piwowar.ovh` wskazują na IP serwera (46.224.7.113)
 - Caddy automatycznie wystawi certyfikaty SSL przez Let's Encrypt
 - Porty 80 i 443 muszą być otwarte w firewall
+- Dashboard używa tej samej instancji PostgreSQL co n8n, ale ma osobną bazę danych
 

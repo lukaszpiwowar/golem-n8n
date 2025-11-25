@@ -12,3 +12,7 @@ piwowar.ovh {
     root * /var/www/html
     file_server
 }
+
+dash.piwowar.ovh {
+    reverse_proxy dashboard:3000
+}

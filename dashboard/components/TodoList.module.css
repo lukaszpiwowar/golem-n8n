@@ -1,0 +1,28 @@
+.container {
+  width: 100%;
+}
+
+.stats {
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  background: rgb(var(--background-start-rgb));
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+}
+
+.list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.empty {
+  text-align: center;
+  padding: 3rem 1rem;
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}
+

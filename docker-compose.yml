@@ -35,6 +35,35 @@ services:
       postgres:
         condition: service_healthy
 
+  dashboard:
+    build:
+      context: ./dashboard
+      dockerfile: Dockerfile
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-n8n}:${POSTGRES_PASSWORD:-n8n}@postgres:5432/dashboard
+      - NEXTAUTH_URL=${DASHBOARD_URL:-https://dash.piwowar.ovh}
+      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-this-secret}
+      - NODE_ENV=production
+      - POSTGRES_USER=${POSTGRES_USER:-n8n}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-n8n}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Waiting for PostgreSQL..."
+        until PGPASSWORD="$$POSTGRES_PASSWORD" psql -h postgres -U "$$POSTGRES_USER" -d postgres -c '\q' 2>/dev/null; do
+          sleep 1
+        done
+        echo "Creating dashboard database..."
+        PGPASSWORD="$$POSTGRES_PASSWORD" psql -h postgres -U "$$POSTGRES_USER" -d postgres -c "SELECT 'CREATE DATABASE dashboard' WHERE NOT EXISTS (SELECT FROM pg_database WHERE datname = 'dashboard')\gexec" || true
+        echo "Running migrations..."
+        DATABASE_URL="postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres:5432/dashboard" node scripts/migrate.js || true
+        echo "Starting Next.js..."
+        node server.js
+
   caddy:
     image: caddy:2
     ports:
@@ -47,6 +76,7 @@ services:
       - caddy_config:/config
     depends_on:
       - n8n
+      - dashboard
 
 volumes:
   postgres_data:

@@ -1,0 +1,88 @@
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgb(var(--background-start-rgb));
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  transition: all 0.2s;
+}
+
+.item:hover {
+  border-color: var(--primary);
+}
+
+.item.completed {
+  opacity: 0.7;
+}
+
+.label {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.checkbox {
+  width: 1.25rem;
+  height: 1.25rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.title {
+  flex: 1;
+  word-break: break-word;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.item.completed .title {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+.deleteButton {
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 0.375rem;
+  color: var(--danger);
+  font-size: 1.5rem;
+  line-height: 1;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: var(--danger);
+  color: white;
+  border-color: var(--danger);
+}
+
+.deleteButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Tablet and Desktop */
+@media (min-width: 768px) {
+  .item {
+    padding: 1.25rem;
+  }
+
+  .deleteButton {
+    width: 2.5rem;
+    height: 2.5rem;
+    font-size: 1.75rem;
+  }
+}
+
