@@ -5,23 +5,27 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
-// Parse DATABASE_URL and handle special characters in password
+// Parse DATABASE_URL manually to handle special characters in password
+// Format: postgresql://user:password@host:port/database
 let poolConfig;
-try {
-  const url = new URL(process.env.DATABASE_URL);
+const dbUrl = process.env.DATABASE_URL;
+const match = dbUrl.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/);
+
+if (match) {
+  const [, user, password, host, port, database] = match;
   poolConfig = {
-    host: url.hostname,
-    port: parseInt(url.port) || 5432,
-    database: url.pathname.slice(1), // Remove leading '/'
-    user: url.username,
-    password: url.password, // URL parser handles URL encoding automatically
+    host,
+    port: parseInt(port) || 5432,
+    database,
+    user,
+    password, // Password may contain special characters like #
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   };
-} catch (error) {
-  // Fallback to connection string if URL parsing fails
-  console.warn('Failed to parse DATABASE_URL, using connection string directly');
+} else {
+  // Fallback: try to use connection string directly (may fail with special chars)
+  console.warn('Failed to parse DATABASE_URL format, using connection string directly');
   poolConfig = {
-    connectionString: process.env.DATABASE_URL,
+    connectionString: dbUrl,
     ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   };
 }
