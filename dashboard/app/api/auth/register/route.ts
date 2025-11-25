@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import pool from '@/lib/db';
+import getPool from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if user already exists
+    const pool = getPool();
     const existingUser = await pool.query(
       'SELECT id FROM users WHERE email = $1',
       [email]

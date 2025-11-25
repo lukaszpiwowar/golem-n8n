@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import pool from '@/lib/db';
+import getPool from '@/lib/db';
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,6 +10,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const pool = getPool();
     const result = await pool.query(
       'SELECT id, title, completed, created_at, updated_at FROM todos WHERE user_id = $1 ORDER BY created_at DESC',
       [session.user.id]
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
     }
 
+    const pool = getPool();
     const result = await pool.query(
       'INSERT INTO todos (user_id, title) VALUES ($1, $2) RETURNING id, title, completed, created_at, updated_at',
       [session.user.id, title.trim()]

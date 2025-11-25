@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-import pool from '@/lib/db';
+import getPool from '@/lib/db';
 
 export async function PATCH(
   request: NextRequest,
@@ -17,6 +17,7 @@ export async function PATCH(
     const { title, completed } = body;
 
     // Verify todo belongs to user
+    const pool = getPool();
     const checkResult = await pool.query(
       'SELECT id FROM todos WHERE id = $1 AND user_id = $2',
       [params.id, session.user.id]
@@ -69,6 +70,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
+    const pool = getPool();
     const result = await pool.query(
       'DELETE FROM todos WHERE id = $1 AND user_id = $2 RETURNING id',
       [params.id, session.user.id]
