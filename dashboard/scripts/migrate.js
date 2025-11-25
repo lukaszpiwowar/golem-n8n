@@ -13,20 +13,22 @@ const match = dbUrl.match(/^postgresql:\/\/([^:]+):([^@]+)@([^:]+):(\d+)\/(.+)$/
 
 if (match) {
   const [, user, password, host, port, database] = match;
+  // Disable SSL for local connections (postgres hostname)
+  const isLocalConnection = host === 'postgres' || host === 'localhost' || host === '127.0.0.1';
   poolConfig = {
     host,
     port: parseInt(port) || 5432,
     database,
     user,
     password, // Password may contain special characters like #
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: !isLocalConnection && process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
   };
 } else {
   // Fallback: try to use connection string directly (may fail with special chars)
   console.warn('Failed to parse DATABASE_URL format, using connection string directly');
   poolConfig = {
     connectionString: dbUrl,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+    ssl: false, // Disable SSL for fallback
   };
 }
 
