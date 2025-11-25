@@ -66,7 +66,7 @@ services:
           echo "Database 'dashboard' already exists"
         fi
         echo "Running migrations..."
-        DATABASE_URL="postgresql://$$POSTGRES_USER:$$POSTGRES_PASSWORD@postgres:5432/dashboard" node scripts/migrate.js
+        node scripts/migrate.js
         echo "Starting Next.js..."
         exec node server.js
 
