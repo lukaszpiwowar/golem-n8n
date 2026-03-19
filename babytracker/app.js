@@ -36,6 +36,8 @@ let currentFamilyId = null;
 let unsubscribeEvents = null;
 let allEvents = [];
 let pendingDeleteId = null;
+let babyName = null;
+let defaultFeedingSource = 'breast_left';
 
 // ===== UTILS =====
 
@@ -117,11 +119,12 @@ function openModal(name) {
     document.getElementById('feeding-duration').value = '';
     document.getElementById('feeding-amount').value = '';
     document.getElementById('feeding-note').value = '';
-    // Reset source to first option
-    document.querySelectorAll('#feeding-source-group .option-btn').forEach((btn, i) => {
-      btn.classList.toggle('active', i === 0);
+    // Pre-select default feeding source
+    document.querySelectorAll('#feeding-source-group .option-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.value === defaultFeedingSource);
     });
-    document.getElementById('bottle-amount-group').style.display = 'none';
+    const isBottle = defaultFeedingSource === 'bottle';
+    document.getElementById('bottle-amount-group').style.display = isBottle ? 'flex' : 'none';
   } else if (name === 'poop') {
     document.getElementById('poop-time').value = getCurrentDateTimeLocal();
     document.getElementById('poop-note').value = '';
@@ -152,8 +155,10 @@ onAuthStateChanged(auth, async (user) => {
       } else {
         currentFamilyId = await createFamily(user.uid, user.displayName || 'Rodzic');
       }
+      await loadFamilyData();
       showAppScreen();
       subscribeToEvents();
+      checkBabySetup();
     } catch (err) {
       console.error('Auth state error:', err);
       showAuthScreen();
@@ -337,6 +342,60 @@ async function handleJoinFamily() {
   }
 }
 
+async function loadFamilyData() {
+  if (!currentFamilyId) return;
+  try {
+    const familyDoc = await getDoc(doc(db, 'families', currentFamilyId));
+    if (!familyDoc.exists()) return;
+    const data = familyDoc.data();
+    babyName = data.babyName || null;
+    defaultFeedingSource = data.defaultFeedingSource || 'breast_left';
+    updateHeaderBabyName();
+  } catch (err) {
+    console.error('Error loading family data:', err);
+  }
+}
+
+function updateHeaderBabyName() {
+  const el = document.getElementById('header-baby-name');
+  el.textContent = babyName ? `👶 ${babyName}` : 'Baby Tracker';
+}
+
+function checkBabySetup() {
+  if (!babyName) openModal('baby-setup');
+}
+
+async function saveBabySetup() {
+  const name = document.getElementById('baby-name-input').value.trim();
+  const sourceEl = document.querySelector('#baby-default-source-group .option-btn.active');
+  const source = sourceEl ? sourceEl.dataset.value : 'bottle';
+  const errorEl = document.getElementById('baby-setup-error');
+  errorEl.textContent = '';
+
+  if (!name) { errorEl.textContent = 'Podaj imię maluszka.'; return; }
+
+  const btn = document.getElementById('save-baby-setup-btn');
+  btn.disabled = true;
+  btn.textContent = 'Zapisuję...';
+
+  try {
+    await updateDoc(doc(db, 'families', currentFamilyId), {
+      babyName: name,
+      defaultFeedingSource: source
+    });
+    babyName = name;
+    defaultFeedingSource = source;
+    updateHeaderBabyName();
+    closeModal('baby-setup');
+    showToast(`Cześć, ${name}! 🎉`);
+  } catch (err) {
+    console.error(err);
+    errorEl.textContent = 'Błąd zapisu. Spróbuj ponownie.';
+    btn.disabled = false;
+    btn.textContent = 'Zapisz';
+  }
+}
+
 async function loadFamilyInfo() {
   if (!currentFamilyId) return;
 
@@ -346,6 +405,12 @@ async function loadFamilyInfo() {
 
     const data = familyDoc.data();
     document.getElementById('family-code-display').textContent = data.code || '–';
+
+    // Baby settings display
+    const sourceLabels = { breast_left: 'Lewa pierś', breast_right: 'Prawa pierś', bottle: 'Butelka' };
+    document.getElementById('family-baby-name').textContent = data.babyName || 'Nie ustawiono';
+    document.getElementById('family-baby-source').textContent =
+      `Domyślnie: ${sourceLabels[data.defaultFeedingSource] || 'Lewa pierś'}`;
 
     const membersEl = document.getElementById('family-members-list');
     if (data.members && data.members.length > 0) {
@@ -591,9 +656,13 @@ function updateStats(events) {
 
   const feedingsToday = todayEvents.filter(e => e.type === 'feeding').length;
   const diapersToday = todayEvents.filter(e => e.type === 'poop' || e.type === 'pee').length;
+  const mlToday = todayEvents
+    .filter(e => e.type === 'feeding' && e.amount)
+    .reduce((sum, e) => sum + (e.amount || 0), 0);
 
   document.getElementById('stat-feedings').textContent = feedingsToday;
   document.getElementById('stat-diapers').textContent = diapersToday;
+  document.getElementById('stat-ml').textContent = mlToday > 0 ? `${mlToday}` : '–';
 
   const lastFeeding = events.find(e => e.type === 'feeding');
   if (lastFeeding) {
@@ -687,6 +756,30 @@ document.getElementById('delete-confirm-btn').addEventListener('click', executeD
 document.getElementById('delete-cancel-btn').addEventListener('click', () => {
   pendingDeleteId = null;
   closeModal('delete');
+});
+
+// Baby setup modal
+document.getElementById('save-baby-setup-btn').addEventListener('click', saveBabySetup);
+document.getElementById('baby-setup-skip-btn').addEventListener('click', () => closeModal('baby-setup'));
+
+document.querySelectorAll('#baby-default-source-group .option-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('#baby-default-source-group .option-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+// Edit baby button in family modal
+document.getElementById('edit-baby-btn').addEventListener('click', () => {
+  closeModal('family');
+  // Pre-fill baby setup form with current values
+  document.getElementById('baby-name-input').value = babyName || '';
+  document.querySelectorAll('#baby-default-source-group .option-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.value === defaultFeedingSource);
+  });
+  document.getElementById('baby-setup-title').textContent = '👶 Edytuj maluszka';
+  document.getElementById('baby-setup-error').textContent = '';
+  openModal('baby-setup');
 });
 
 // Register form: auto-uppercase the family code field

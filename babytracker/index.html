@@ -64,7 +64,7 @@
     <header class="app-header">
       <div class="header-left">
         <span class="header-logo">🍼</span>
-        <h2 class="header-title">Baby Tracker</h2>
+        <h2 class="header-title" id="header-baby-name">Baby Tracker</h2>
       </div>
       <div class="header-actions">
         <button id="family-btn" class="icon-btn" title="Rodzina">👥</button>
@@ -78,6 +78,11 @@
         <span class="stat-icon">🍼</span>
         <span class="stat-value" id="stat-feedings">–</span>
         <span class="stat-label">karmień dziś</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">💧</span>
+        <span class="stat-value" id="stat-ml">–</span>
+        <span class="stat-label">ml dziś</span>
       </div>
       <div class="stat-card stat-card--highlight">
         <span class="stat-icon">⏱</span>
@@ -224,6 +229,19 @@
         <button class="close-btn" data-modal="family">✕</button>
       </div>
       <div class="modal-body">
+
+        <!-- Baby settings -->
+        <p class="section-label">Maluszek</p>
+        <div class="baby-settings-row">
+          <div class="baby-settings-info">
+            <span class="baby-settings-name" id="family-baby-name">–</span>
+            <span class="baby-settings-source" id="family-baby-source">–</span>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="edit-baby-btn">Edytuj</button>
+        </div>
+
+        <div class="divider"><span>kod rodziny</span></div>
+
         <p class="section-label">Twój kod rodziny:</p>
         <div class="family-code-box">
           <span id="family-code-display" class="family-code-text">–</span>
@@ -241,6 +259,35 @@
         <button class="btn btn-secondary btn-full" id="join-family-btn">Dołącz do rodziny</button>
 
         <div class="family-members" id="family-members-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Baby Setup Modal -->
+  <div id="baby-setup-modal" class="modal modal--small" role="dialog" aria-modal="true" aria-label="Ustawienia maluszka">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet modal-sheet--center">
+      <div class="modal-header">
+        <h3 id="baby-setup-title">👶 Twój maluszek</h3>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="baby-name-input">Imię maluszka</label>
+          <input class="form-input" type="text" id="baby-name-input" placeholder="np. Zosia" autocomplete="off">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Domyślna metoda karmienia</label>
+          <div class="option-group" id="baby-default-source-group">
+            <button class="option-btn" data-value="breast_left">Lewa pierś</button>
+            <button class="option-btn" data-value="breast_right">Prawa pierś</button>
+            <button class="option-btn active" data-value="bottle">Butelka</button>
+          </div>
+        </div>
+        <p id="baby-setup-error" class="form-error"></p>
+      </div>
+      <div class="modal-footer modal-footer--row">
+        <button class="btn btn-ghost" id="baby-setup-skip-btn">Pomiń</button>
+        <button class="btn btn-primary" id="save-baby-setup-btn">Zapisz</button>
       </div>
     </div>
   </div>

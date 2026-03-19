@@ -251,7 +251,7 @@ a { color: inherit; text-decoration: none; }
 /* ===== STATS BAR ===== */
 .stats-bar {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr 1fr;
   gap: .75rem;
   padding: 1rem 1.25rem;
 }
@@ -723,6 +723,41 @@ a { color: inherit; text-decoration: none; }
 .member-you {
   font-size: .75rem;
   color: var(--color-primary);
+}
+
+/* ===== BABY SETTINGS ===== */
+.baby-settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-md);
+  padding: .875rem 1rem;
+  gap: .75rem;
+}
+
+.baby-settings-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.baby-settings-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--color-primary-dark);
+}
+
+.baby-settings-source {
+  font-size: .8rem;
+  color: var(--color-text-muted);
+}
+
+.btn-sm {
+  padding: .5rem .875rem;
+  font-size: .85rem;
+  border-radius: var(--radius-md);
+  flex-shrink: 0;
 }
 
 /* ===== TOAST ===== */
