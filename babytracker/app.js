@@ -251,6 +251,14 @@ async function createFamily(uid, name, email) {
   const code = generateCode();
   const familyId = uid;
 
+  // User doc must be written FIRST – family write rule reads it via getUserFamilyId()
+  await setDoc(doc(db, 'users', uid), {
+    familyId,
+    displayName: name,
+    email: email || currentUser?.email || '',
+    createdAt: serverTimestamp()
+  });
+
   await setDoc(doc(db, 'families', familyId), {
     code,
     members: [uid],
@@ -258,13 +266,6 @@ async function createFamily(uid, name, email) {
   });
 
   await setDoc(doc(db, 'familyCodes', code), { familyId });
-
-  await setDoc(doc(db, 'users', uid), {
-    familyId,
-    displayName: name,
-    email: email || currentUser?.email || '',
-    createdAt: serverTimestamp()
-  });
 
   currentFamilyId = familyId;
   return familyId;

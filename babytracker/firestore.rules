@@ -23,16 +23,18 @@ service cloud.firestore {
 
     // Family document: only members can read/write
     match /families/{familyId} {
-      allow read, write: if isAuth() && getUserFamilyId() == familyId;
+      // familyId == uid means this user is the owner/creator of this family
+      allow read, write: if isAuth() && (
+        request.auth.uid == familyId || getUserFamilyId() == familyId
+      );
 
-      // Events subcollection
       match /events/{eventId} {
-        allow read: if isAuth() && getUserFamilyId() == familyId;
-        allow create: if isAuth() && getUserFamilyId() == familyId;
-        allow update: if isAuth() && getUserFamilyId() == familyId
-                       && resource.data.userId == request.auth.uid;
-        allow delete: if isAuth() && getUserFamilyId() == familyId
-                       && resource.data.userId == request.auth.uid;
+        allow read, create: if isAuth() && (
+          request.auth.uid == familyId || getUserFamilyId() == familyId
+        );
+        allow update, delete: if isAuth()
+          && (request.auth.uid == familyId || getUserFamilyId() == familyId)
+          && resource.data.userId == request.auth.uid;
       }
     }
   }
