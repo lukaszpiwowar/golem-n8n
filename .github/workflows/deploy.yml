@@ -83,7 +83,7 @@ jobs:
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
               "echo 'SSH connection successful'"
       
-      - name: Inject Firebase config
+      - name: Deploy to server
         uses: appleboy/ssh-action@v1.0.3
         env:
           FIREBASE_CONFIG_JS: ${{ secrets.FIREBASE_CONFIG_JS }}
@@ -92,17 +92,6 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: FIREBASE_CONFIG_JS
-          script: |
-            mkdir -p ~/golem-n8n/babytracker
-            printf '%s' "$FIREBASE_CONFIG_JS" > ~/golem-n8n/babytracker/firebase-config.js
-            echo "🔑 Firebase config injected"
-
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
           timeout: 60s
           script: |
             set -e
@@ -111,6 +100,8 @@ jobs:
             echo "📥 Pobieranie najnowszych zmian z repozytorium..."
             git fetch origin main
             git reset --hard origin/main
+            echo "🔑 Injecting Firebase config..."
+            printf '%s' "$FIREBASE_CONFIG_JS" > babytracker/firebase-config.js
             echo "🐳 Aktualizacja obrazów Docker..."
             docker compose pull
             echo "🔄 Restartowanie kontenerów..."

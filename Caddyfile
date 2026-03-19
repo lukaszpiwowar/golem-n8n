@@ -19,6 +19,8 @@ dash.piwowar.ovh {
 
 baby.piwowar.ovh {
     root * /var/www/babytracker
-    file_server
-    try_files {path} /index.html
+    encode gzip
+    file_server {
+        index index.html
+    }
 }
