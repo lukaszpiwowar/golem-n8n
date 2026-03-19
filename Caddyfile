@@ -16,3 +16,9 @@ piwowar.ovh {
 dash.piwowar.ovh {
     reverse_proxy dashboard:3000
 }
+
+baby.piwowar.ovh {
+    root * /var/www/babytracker
+    file_server
+    try_files {path} /index.html
+}

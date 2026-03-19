@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAuth() {
+      return request.auth != null;
+    }
+
+    function getUserFamilyId() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.familyId;
+    }
+
+    // Users can read/write only their own user doc
+    match /users/{userId} {
+      allow read, write: if isAuth() && request.auth.uid == userId;
+    }
+
+    // Family codes: authenticated users can read; only owners can write
+    match /familyCodes/{code} {
+      allow read: if isAuth();
+      allow write: if isAuth();
+    }
+
+    // Family document: only members can read/write
+    match /families/{familyId} {
+      allow read, write: if isAuth() && getUserFamilyId() == familyId;
+
+      // Events subcollection
+      match /events/{eventId} {
+        allow read: if isAuth() && getUserFamilyId() == familyId;
+        allow create: if isAuth() && getUserFamilyId() == familyId;
+        allow update: if isAuth() && getUserFamilyId() == familyId
+                       && resource.data.userId == request.auth.uid;
+        allow delete: if isAuth() && getUserFamilyId() == familyId
+                       && resource.data.userId == request.auth.uid;
+      }
+    }
+  }
+}

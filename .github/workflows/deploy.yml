@@ -12,7 +12,62 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
+      - name: Sync Cloudflare DNS
+        env:
+          CF_API_TOKEN: ${{ secrets.CF_API_TOKEN }}
+          CF_ZONE_ID: ${{ secrets.CF_ZONE_ID }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+        run: |
+          # Resolve server IP – works whether SSH_HOST is an IP or a hostname
+          if echo "$SSH_HOST" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$'; then
+            SERVER_IP="$SSH_HOST"
+          else
+            SERVER_IP=$(dig +short "$SSH_HOST" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
+          fi
+
+          if [ -z "$SERVER_IP" ]; then
+            echo "❌ Could not resolve server IP from SSH_HOST=$SSH_HOST"
+            exit 1
+          fi
+          echo "📡 Server IP: $SERVER_IP"
+
+          # Extract hostnames from Caddyfile – lines like "host.example.com {"
+          HOSTS=$(grep -E '^[a-zA-Z0-9._-]+\s*\{' Caddyfile | sed 's/[[:space:]]*{.*//')
+
+          for HOST in $HOSTS; do
+            echo "🔁 Syncing: $HOST → $SERVER_IP"
+
+            EXISTING=$(curl -sf -X GET \
+              "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records?type=A&name=${HOST}" \
+              -H "Authorization: Bearer ${CF_API_TOKEN}" \
+              -H "Content-Type: application/json")
+
+            RECORD_ID=$(echo "$EXISTING" | jq -r '.result[0].id // empty')
+
+            if [ -n "$RECORD_ID" ]; then
+              RESULT=$(curl -sf -X PATCH \
+                "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records/${RECORD_ID}" \
+                -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${SERVER_IP}\",\"proxied\":false,\"ttl\":1}")
+              echo "  ✅ Updated $HOST"
+            else
+              RESULT=$(curl -sf -X POST \
+                "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_records" \
+                -H "Authorization: Bearer ${CF_API_TOKEN}" \
+                -H "Content-Type: application/json" \
+                -d "{\"type\":\"A\",\"name\":\"${HOST}\",\"content\":\"${SERVER_IP}\",\"proxied\":false,\"ttl\":1}")
+              echo "  ✅ Created $HOST"
+            fi
+
+            if [ "$(echo "$RESULT" | jq -r '.success')" != "true" ]; then
+              echo "  ❌ Error: $(echo "$RESULT" | jq -r '.errors')"
+              exit 1
+            fi
+          done
+          echo "✨ Cloudflare DNS sync complete!"
+
       - name: Setup SSH key
         run: |
           mkdir -p ~/.ssh

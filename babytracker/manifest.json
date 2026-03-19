@@ -1,0 +1,37 @@
+{
+  "name": "Baby Tracker",
+  "short_name": "BabyTrack",
+  "description": "Śledź karmienia i pieluszki swojego maluszka",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f3ff",
+  "theme_color": "#8b5cf6",
+  "orientation": "portrait-primary",
+  "lang": "pl",
+  "categories": ["health", "lifestyle"],
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-maskable.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Dodaj karmienie",
+      "short_name": "Karmienie",
+      "description": "Szybko dodaj karmienie",
+      "url": "./?action=feeding",
+      "icons": [{ "src": "icons/icon.svg", "sizes": "any" }]
+    }
+  ]
+}

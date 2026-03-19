@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#8b5cf6">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="BabyTrack">
+  <title>Baby Tracker</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon.svg">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- Auth Screen -->
+  <div id="auth-screen" class="screen active">
+    <div class="auth-container">
+      <div class="auth-logo">🍼</div>
+      <h1 class="auth-title">Baby Tracker</h1>
+      <p class="auth-subtitle">Śledź karmienia i pieluszki</p>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Zaloguj się</button>
+        <button class="auth-tab" data-tab="register">Zarejestruj</button>
+      </div>
+
+      <form id="login-form" class="auth-form active">
+        <div class="input-group">
+          <input type="email" id="login-email" placeholder="Email" autocomplete="email" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="login-password" placeholder="Hasło" autocomplete="current-password" required>
+        </div>
+        <p id="login-error" class="form-error"></p>
+        <button type="submit" class="btn btn-primary btn-full">Zaloguj się</button>
+      </form>
+
+      <form id="register-form" class="auth-form">
+        <div class="input-group">
+          <input type="text" id="reg-name" placeholder="Twoje imię" autocomplete="given-name" required>
+        </div>
+        <div class="input-group">
+          <input type="email" id="reg-email" placeholder="Email" autocomplete="email" required>
+        </div>
+        <div class="input-group">
+          <input type="password" id="reg-password" placeholder="Hasło (min. 6 znaków)" autocomplete="new-password" required>
+        </div>
+        <div class="input-group">
+          <input type="text" id="reg-family-code" placeholder="Kod rodziny (opcjonalnie – jeśli masz od partnera)" maxlength="6" autocomplete="off" style="text-transform:uppercase">
+          <span class="input-hint">Zostaw puste, aby założyć nową rodzinę</span>
+        </div>
+        <p id="register-error" class="form-error"></p>
+        <button type="submit" class="btn btn-primary btn-full">Zarejestruj się</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Main App Screen -->
+  <div id="app-screen" class="screen">
+
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-left">
+        <span class="header-logo">🍼</span>
+        <h2 class="header-title">Baby Tracker</h2>
+      </div>
+      <div class="header-actions">
+        <button id="family-btn" class="icon-btn" title="Rodzina">👥</button>
+        <button id="logout-btn" class="icon-btn" title="Wyloguj">🚪</button>
+      </div>
+    </header>
+
+    <!-- Stats Bar -->
+    <div class="stats-bar">
+      <div class="stat-card">
+        <span class="stat-icon">🍼</span>
+        <span class="stat-value" id="stat-feedings">–</span>
+        <span class="stat-label">karmień dziś</span>
+      </div>
+      <div class="stat-card stat-card--highlight">
+        <span class="stat-icon">⏱</span>
+        <span class="stat-value" id="stat-last-feeding">–</span>
+        <span class="stat-label">od karmienia</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-icon">🩲</span>
+        <span class="stat-value" id="stat-diapers">–</span>
+        <span class="stat-label">pieluszek dziś</span>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="quick-actions">
+      <button class="action-btn action-btn--feeding" id="btn-feeding">
+        <span class="action-icon">🍼</span>
+        <span class="action-label">Karmienie</span>
+      </button>
+      <button class="action-btn action-btn--poop" id="btn-poop">
+        <span class="action-icon">💩</span>
+        <span class="action-label">Kupa</span>
+      </button>
+      <button class="action-btn action-btn--pee" id="btn-pee">
+        <span class="action-icon">💧</span>
+        <span class="action-label">Siku</span>
+      </button>
+    </div>
+
+    <!-- Timeline -->
+    <div class="timeline-section">
+      <div class="timeline-header">
+        <h3>Historia</h3>
+      </div>
+      <div id="timeline" class="timeline">
+        <div class="timeline-loading">
+          <div class="spinner"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ===== MODALS ===== -->
+
+  <!-- Feeding Modal -->
+  <div id="feeding-modal" class="modal" role="dialog" aria-modal="true" aria-label="Dodaj karmienie">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>🍼 Dodaj karmienie</h3>
+        <button class="close-btn" data-modal="feeding">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Źródło karmienia</label>
+          <div class="option-group" id="feeding-source-group">
+            <button class="option-btn active" data-value="breast_left">Lewa pierś</button>
+            <button class="option-btn" data-value="breast_right">Prawa pierś</button>
+            <button class="option-btn" data-value="bottle">Butelka</button>
+          </div>
+        </div>
+        <div class="form-group" id="bottle-amount-group" style="display:none">
+          <label class="form-label" for="feeding-amount">Ilość (ml)</label>
+          <input class="form-input" type="number" id="feeding-amount" placeholder="np. 120" min="0" max="500" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="feeding-duration">Czas karmienia (min)</label>
+          <input class="form-input" type="number" id="feeding-duration" placeholder="np. 15" min="0" max="120" inputmode="numeric">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="feeding-time">Godzina</label>
+          <input class="form-input" type="datetime-local" id="feeding-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="feeding-note">Notatka (opcjonalnie)</label>
+          <input class="form-input" type="text" id="feeding-note" placeholder="...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-full" id="save-feeding-btn">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Poop Modal -->
+  <div id="poop-modal" class="modal" role="dialog" aria-modal="true" aria-label="Dodaj kupę">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>💩 Dodaj kupę</h3>
+        <button class="close-btn" data-modal="poop">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="poop-time">Godzina</label>
+          <input class="form-input" type="datetime-local" id="poop-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="poop-note">Notatka (opcjonalnie)</label>
+          <input class="form-input" type="text" id="poop-note" placeholder="...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-full" id="save-poop-btn">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pee Modal -->
+  <div id="pee-modal" class="modal" role="dialog" aria-modal="true" aria-label="Dodaj siku">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>💧 Dodaj siku</h3>
+        <button class="close-btn" data-modal="pee">✕</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label" for="pee-time">Godzina</label>
+          <input class="form-input" type="datetime-local" id="pee-time">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pee-note">Notatka (opcjonalnie)</label>
+          <input class="form-input" type="text" id="pee-note" placeholder="...">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-primary btn-full" id="save-pee-btn">Zapisz</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Family Modal -->
+  <div id="family-modal" class="modal" role="dialog" aria-modal="true" aria-label="Rodzina">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <div class="modal-header">
+        <h3>👨‍👩‍👦 Rodzina</h3>
+        <button class="close-btn" data-modal="family">✕</button>
+      </div>
+      <div class="modal-body">
+        <p class="section-label">Twój kod rodziny:</p>
+        <div class="family-code-box">
+          <span id="family-code-display" class="family-code-text">–</span>
+          <button class="copy-btn" id="copy-code-btn" title="Kopiuj">📋</button>
+        </div>
+        <p class="hint-text">Podaj ten 6-znakowy kod partnerowi podczas rejestracji lub poniżej.</p>
+
+        <div class="divider"><span>lub dołącz do innej rodziny</span></div>
+
+        <div class="form-group">
+          <label class="form-label" for="join-code-input">Kod rodziny partnera</label>
+          <input class="form-input" type="text" id="join-code-input" placeholder="ABCD12" maxlength="6" style="text-transform:uppercase; letter-spacing: 4px; font-size: 1.3rem; text-align:center">
+        </div>
+        <p id="join-error" class="form-error"></p>
+        <button class="btn btn-secondary btn-full" id="join-family-btn">Dołącz do rodziny</button>
+
+        <div class="family-members" id="family-members-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete confirm modal -->
+  <div id="delete-modal" class="modal modal--small" role="dialog" aria-modal="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-sheet modal-sheet--center">
+      <div class="modal-header">
+        <h3>Usuń wpis?</h3>
+      </div>
+      <div class="modal-body">
+        <p>Ta akcja jest nieodwracalna.</p>
+      </div>
+      <div class="modal-footer modal-footer--row">
+        <button class="btn btn-ghost" id="delete-cancel-btn">Anuluj</button>
+        <button class="btn btn-danger" id="delete-confirm-btn">Usuń</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
