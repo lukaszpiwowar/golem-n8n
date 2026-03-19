@@ -109,7 +109,8 @@ jobs:
             echo "🚀 Rozpoczynam wdrażanie..."
             cd ~/golem-n8n || { echo "❌ Katalog golem-n8n nie istnieje!"; exit 1; }
             echo "📥 Pobieranie najnowszych zmian z repozytorium..."
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
             echo "🐳 Aktualizacja obrazów Docker..."
             docker compose pull
             echo "🔄 Restartowanie kontenerów..."
